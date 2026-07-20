@@ -2,122 +2,1137 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anlık Kod Paylaşım Paneli (WebSocket / Firebase)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>KOD PANELİ</title>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md flex justify-between items-center max-w-5xl w-full mx-auto mt-4 rounded-xl">
-        <div class="flex items-center space-x-2">
-            <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" id="status-dot"></span>
-            <h1 class="font-bold text-lg tracking-wide">Canlı Kod Senkronizasyonu</h1>
-        </div>
-        <div class="flex items-center space-x-2">
-            <button id="copy-btn" onclick="copyCode()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
-                <span id="copy-text">Kopyala</span>
-            </button>
-            <button onclick="downloadPythonFile()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>s.py İndir</span>
-            </button>
-        </div>
-    </header>
+    <!-- CodeMirror 5 : editör + sözdizimi renklendirme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
 
-    <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col">
-        <div class="flex-1 bg-slate-800 border border-slate-700 rounded-xl shadow-xl flex flex-col overflow-hidden">
-            <div class="bg-slate-700/50 px-4 py-2 border-b border-slate-700 text-xs text-slate-400 font-mono flex justify-between">
-                <span>Kod Alanı (Yazdığınız anda diğer cihazlarda görünür)</span>
-                <span id="char-count">0 karakter</span>
-            </div>
-            <textarea id="code-input" 
-                class="flex-1 w-full bg-slate-900/90 text-emerald-400 font-mono p-4 resize-none focus:outline-none focus:ring-0 text-sm md:text-base leading-relaxed" 
-                placeholder="# Kodunuzu buraya yazın veya yapıştırın..."></textarea>
-        </div>
-    </main>
+    <style>
+        :root{
+            --void:#040308;
+            --panel:#0d0c14;
+            --panel-2:#15131f;
+            --line:#26223a;
+            --line-bright:#3d3660;
 
-    <footer class="text-center p-4 text-xs text-slate-500">
-        Firebase Realtime Database ile anlık senkronizasyon aktif.
-    </footer>
+            /* daha doygun / canlı vurgu paleti */
+            --phosphor:#39ffb0;
+            --phosphor-dim:#1f8a5c;
+            --phosphor-glow:rgba(57,255,176,.45);
+            --amber:#ffc93c;
+            --pink:#ff2e9e;
+            --blue:#2fd2ff;
+            --purple:#c46bff;
+            --red:#ff3b5c;
+            --cyan:#28f7e6;
+            --lime:#c6ff3c;
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBV7jtoXPBcPdclcBseOK39wJsSXUxLpg4",
-            databaseURL: "https://atamossocket-default-rtdb.firebaseio.com",
-            projectId: "atamossocket"
-        };
+            --text:#f5f4ff;
+            --text-dim:#948fb8;
+            --mono:'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,monospace;
+            --ui:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+        }
+        /* ---------- Aydınlık mod ---------- */
+        body.light-mode{
+            --void:#f8f7fc;
+            --panel:#ffffff;
+            --panel-2:#f1eefb;
+            --line:#e1dcf2;
+            --line-bright:#c9bfea;
+            --text:#1c1730;
+            --text-dim:#726c98;
+            --phosphor-glow:rgba(31,138,92,.30);
+        }
+        body.light-mode .term-title{ filter:saturate(1.15) brightness(.92); }
+        body.light-mode .CodeMirror-linenumber{ color:#9d97c2!important; }
+        body.light-mode .cm-s-dracula .cm-comment{ color:#8b84b8!important; }
+        @font-face{font-family:'JetBrains Mono';src:local('JetBrains Mono');}
+        *{box-sizing:border-box;}
+        html,body{height:100%;margin:0;}
+        body{
+            background:
+                    radial-gradient(1200px 600px at 12% -10%, rgba(51,198,255,.14), transparent 55%),
+                    radial-gradient(1200px 600px at 88% 0%, rgba(255,61,154,.12), transparent 55%),
+                    radial-gradient(1500px 750px at 50% -15%, rgba(57,255,176,.10), transparent 60%),
+                    var(--void);
+            color:var(--text);
+            font-family:var(--ui);
+            min-height:100%;
+            display:flex;
+            flex-direction:column;
+            padding-top:env(safe-area-inset-top);
+            padding-bottom:env(safe-area-inset-bottom);
+            transition:background-color .25s, color .25s;
+        }
+        ::-webkit-scrollbar{width:9px;height:9px;}
+        ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;}
+        ::-webkit-scrollbar-thumb:hover{background:var(--line-bright);}
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const codeRef = db.ref('sharedCode');
+        /* ---------- HEADER ---------- */
+        header{max-width:1120px;width:100%;margin:0 auto;padding:14px 16px 0;}
+        .term-bar{
+            background:linear-gradient(180deg,var(--panel),var(--panel-2));
+            border:1px solid var(--line);
+            border-bottom:1px solid rgba(57,255,176,.15);
+            border-radius:12px 12px 0 0;
+            padding:10px 14px;
+            display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+        }
+        .dots{display:flex;gap:6px;shrink:0;}
+        .dots span{width:11px;height:11px;border-radius:50%;display:block;box-shadow:0 0 6px rgba(0,0,0,.4) inset;}
+        .d-red{background:#ff5f56;} .d-amber{background:#ffbd2e;} .d-green{background:#27c93f;}
+        .term-title{
+            font-family:var(--mono);font-size:13.5px;font-weight:800;letter-spacing:.08em;
+            background:linear-gradient(90deg,var(--phosphor),var(--cyan),var(--pink),var(--phosphor));
+            background-size:300% auto;
+            -webkit-background-clip:text;background-clip:text;color:transparent;
+            margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+            animation:sheen 7s linear infinite;
+        }
+        @keyframes sheen{0%{background-position:0% center;}100%{background-position:300% center;}}
+        .status-pill{
+            display:flex;align-items:center;gap:6px;
+            font-family:var(--mono);font-size:11px;color:var(--text-dim);
+            padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);
+            white-space:nowrap;
+        }
+        .status-pill.online-pill{color:var(--blue);border-color:rgba(51,198,255,.35);}
+        .status-pill.online-pill svg{width:12px;height:12px;}
+        .header-pills{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+        .status-dot{width:7px;height:7px;border-radius:50%;background:var(--phosphor);box-shadow:0 0 8px var(--phosphor);}
+        .status-dot.off{background:var(--red);box-shadow:0 0 8px var(--red);animation:none;}
+        @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+        .status-dot{animation:pulse 2s ease-in-out infinite;}
 
-        const codeInput = document.getElementById('code-input');
-        const charCount = document.getElementById('char-count');
-        const statusDot = document.getElementById('status-dot');
-        const copyText = document.getElementById('copy-text');
+        .toolbar{
+            background:var(--panel-2);
+            border:1px solid var(--line);border-top:none;
+            padding:10px 14px;
+            display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+        }
+        .room-chip{
+            display:flex;align-items:center;gap:8px;
+            font-family:var(--mono);font-size:12px;color:var(--phosphor);
+            background:rgba(57,255,176,0.1);border:1px solid rgba(57,255,176,0.32);
+            padding:6px 10px;border-radius:8px;
+        }
+        .spacer{flex:1;min-width:8px;}
+        select, .icon-btn, .btn{
+            font-family:var(--ui);font-size:12.5px;
+            background:var(--panel);color:var(--text);
+            border:1px solid var(--line);border-radius:8px;
+            padding:7px 10px;cursor:pointer;
+            display:flex;align-items:center;gap:6px;
+            transition:border-color .15s, background .15s, transform .08s, box-shadow .15s;
+        }
+        select{-webkit-appearance:none;appearance:none;padding-right:26px;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23948fb8'/%3E%3C/svg%3E");
+            background-repeat:no-repeat;background-position:right 9px center;
+        }
+        .icon-btn:hover, .btn:hover, select:hover{border-color:var(--line-bright);background:var(--panel-2);}
+        .icon-btn:active, .btn:active{transform:scale(.94);}
+        .icon-btn:disabled, .btn:disabled{opacity:.4;cursor:not-allowed;}
+        .btn.primary{background:linear-gradient(135deg,var(--phosphor),var(--cyan));color:#04140d;border-color:var(--phosphor);font-weight:700;box-shadow:0 0 0 rgba(57,255,176,0);}
+        .btn.primary:hover{box-shadow:0 4px 20px var(--phosphor-glow);filter:brightness(1.08);}
+        .btn.ghost-danger{color:var(--red);border-color:#5a2029;}
+        .btn.ghost-danger:hover{background:rgba(255,59,92,.1);border-color:var(--red);}
+        .icon-btn svg{width:15px;height:15px;shrink:0;}
+        .icon-btn.active{color:var(--phosphor);border-color:var(--phosphor-dim);background:rgba(57,255,176,0.12);box-shadow:0 0 12px var(--phosphor-glow) inset;}
+        .icon-btn.sound-off{color:var(--red);border-color:#5a2329;}
+        .icon-btn.lock-active{color:var(--red);border-color:#5a2329;background:rgba(255,59,92,.12);box-shadow:0 0 12px rgba(255,59,92,.35) inset;}
+        [data-tip]{position:relative;}
+        [data-tip]::after{
+            content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);
+            background:#000;color:#fff;font-family:var(--mono);font-size:10.5px;padding:4px 8px;border-radius:6px;
+            border:1px solid var(--line-bright);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s, transform .12s;z-index:30;
+        }
+        [data-tip]:hover::after{opacity:1;transform:translateX(-50%) translateY(0);}
+        .lock-banner{
+            display:none;align-items:center;gap:8px;width:100%;
+            font-family:var(--mono);font-size:11.5px;color:var(--red);
+            background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.35);
+            border-radius:8px;padding:6px 10px;margin-top:8px;
+        }
+        .lock-banner.show{display:flex;}
 
-        let isRemoteUpdate = false;
+        /* ---------- EDITOR ---------- */
+        main{
+            max-width:1120px;width:100%;margin:0 auto;padding:0 16px 16px;
+            flex:1;display:flex;flex-direction:column;min-height:0;
+        }
+        .editor-shell{
+            flex:1;display:flex;flex-direction:column;min-height:0;
+            border:1px solid var(--line);border-top:none;
+            background:var(--void);
+            border-radius:0 0 12px 12px;overflow:hidden;
+            position:relative;
+        }
+        .editor-shell.is-locked::after{
+            content:'';position:absolute;inset:0;pointer-events:none;
+            box-shadow:inset 0 0 0 2px rgba(255,59,92,.5);border-radius:0 0 12px 12px;
+        }
+        .CodeMirror{
+            flex:1;height:auto;min-height:0;
+            font-family:var(--mono)!important;
+            background:var(--void)!important;
+            padding-top:6px;
+            line-height:1.55;
+        }
+        .CodeMirror-gutters{background:var(--void)!important;border-right:1px solid var(--line)!important;}
+        .CodeMirror-linenumber{color:#453f60!important;}
+        .CodeMirror-cursor{border-left:2px solid var(--phosphor)!important;box-shadow:0 0 6px var(--phosphor-glow);}
+        .cm-s-dracula.CodeMirror{color:var(--text);background:var(--void)!important;}
+        .CodeMirror-activeline-background{background:rgba(57,255,176,0.06)!important;}
+        .CodeMirror-matchingbracket{color:var(--phosphor)!important;text-decoration:underline;}
+        .CodeMirror-focused .CodeMirror-selected{background:rgba(51,198,255,0.2)!important;}
+        .CodeMirror-dialog{background:var(--panel);color:var(--text);border-top:1px solid var(--line);font-family:var(--mono);}
+        .CodeMirror-dialog input{background:var(--void);color:var(--phosphor);border:1px solid var(--line);}
 
-        codeRef.on('value', (snapshot) => {
-            const serverCode = snapshot.val();
-            if (serverCode !== null && serverCode !== codeInput.value) {
-                isRemoteUpdate = true;
-                codeInput.value = serverCode;
-                updateCharCount(serverCode);
-                isRemoteUpdate = false;
-            }
-            statusDot.classList.remove('bg-rose-500');
-            statusDot.classList.add('bg-emerald-500');
-        }, (error) => {
-            console.error("Bağlantı hatası:", error);
-            statusDot.classList.remove('bg-emerald-500');
-            statusDot.classList.add('bg-rose-500');
-        });
+        /* ---- cıvıl cıvıl, yüksek doygunluklu sözdizimi renkleri ---- */
+        .cm-s-dracula .cm-keyword{color:var(--pink)!important;font-weight:700;text-shadow:0 0 10px rgba(255,46,158,.35);}
+        .cm-s-dracula .cm-atom{color:var(--purple)!important;}
+        .cm-s-dracula .cm-number{color:var(--lime)!important;font-weight:600;}
+        .cm-s-dracula .cm-def{color:var(--blue)!important;font-weight:700;}
+        .cm-s-dracula .cm-variable{color:var(--text)!important;}
+        .cm-s-dracula .cm-variable-2{color:var(--blue)!important;}
+        .cm-s-dracula .cm-variable-3, .cm-s-dracula .cm-type{color:var(--amber)!important;}
+        .cm-s-dracula .cm-property{color:var(--phosphor)!important;}
+        .cm-s-dracula .cm-operator{color:var(--cyan)!important;font-weight:600;}
+        .cm-s-dracula .cm-string, .cm-s-dracula .cm-string-2{color:var(--amber)!important;text-shadow:0 0 8px rgba(255,201,60,.25);}
+        .cm-s-dracula .cm-comment{color:#726c93!important;font-style:italic;}
+        .cm-s-dracula .cm-meta{color:var(--phosphor)!important;}
+        .cm-s-dracula .cm-tag{color:var(--pink)!important;font-weight:700;}
+        .cm-s-dracula .cm-attribute{color:var(--blue)!important;}
+        .cm-s-dracula .cm-builtin{color:var(--purple)!important;}
+        .cm-s-dracula .cm-qualifier{color:var(--amber)!important;}
+        .cm-s-dracula .cm-bracket{color:var(--cyan)!important;}
+        .cm-s-dracula .cm-header{color:var(--blue)!important;}
+        .cm-s-dracula .cm-link{color:var(--phosphor)!important;text-decoration:underline;}
 
-        codeInput.addEventListener('input', (e) => {
-            if (isRemoteUpdate) return;
-            const currentText = e.target.value;
-            codeRef.set(currentText);
-            updateCharCount(currentText);
-        });
+        .status-bar{
+            background:var(--panel);border-top:1px solid var(--line);
+            padding:6px 14px;display:flex;align-items:center;gap:14px;
+            font-family:var(--mono);font-size:11px;color:var(--text-dim);flex-wrap:wrap;
+        }
+        .status-bar b{color:var(--text);font-weight:500;}
+        .status-bar .lock-flag{display:none;align-items:center;gap:5px;color:var(--red);}
+        .status-bar .lock-flag.show{display:flex;}
+        .saving{color:var(--amber);display:flex;align-items:center;gap:5px;opacity:0;transition:opacity .2s;}
+        .saving.show{opacity:1;}
+        .saving .sdot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 1s infinite;}
 
-        function updateCharCount(text) {
-            charCount.innerText = `${text.length} karakter`;
+        footer{
+            text-align:center;padding:10px 16px 16px;
+            font-family:var(--mono);font-size:11px;color:#514a72;
+        }
+        footer kbd{
+            background:var(--panel-2);border:1px solid var(--line);border-radius:4px;
+            padding:1px 5px;color:var(--text-dim);font-family:var(--mono);
         }
 
-        // Tek hamlede kopyalama fonksiyonu
-        function copyCode() {
-            codeInput.select();
-            codeInput.setSelectionRange(0, 99999); // Mobil uyumluluk için
-            navigator.clipboard.writeText(codeInput.value).then(() => {
-                copyText.innerText = "Kopyalandı!";
-                setTimeout(() => {
-                    copyText.innerText = "Kopyala";
-                }, 2000);
-            }).catch(err => {
-                console.error("Kopyalama başarısız:", err);
+        /* ---------- ARCHIVE ---------- */
+        #archive-overlay{position:fixed;inset:0;background:rgba(4,3,8,.7);z-index:40;backdrop-filter:blur(4px);}
+        #archive-panel{
+            position:fixed;inset-inline:0;bottom:0;z-index:50;
+            background:var(--panel);border-top:1px solid var(--line);
+            border-radius:16px 16px 0 0;max-height:82vh;display:flex;flex-direction:column;
+            padding-bottom:env(safe-area-inset-bottom);
+            box-shadow:0 -12px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(57,255,176,.08);
+        }
+        @media(min-width:640px){
+            #archive-panel{inset-inline:auto;right:0;top:0;bottom:0;left:auto;width:420px;
+                border-radius:0;border-top:none;border-left:1px solid var(--line);max-height:none;}
+        }
+        .archive-head{
+            display:flex;align-items:center;justify-content:space-between;
+            padding:16px;border-bottom:1px solid var(--line);shrink:0;gap:8px;
+        }
+        .archive-head h2{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+        .archive-head h2 span{color:var(--text-dim);font-weight:400;font-size:12px;}
+        .live-badge{
+            display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9.5px;
+            color:var(--phosphor);background:rgba(57,255,176,.12);border:1px solid rgba(57,255,176,.35);
+            padding:2px 6px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;
+        }
+        .live-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--phosphor);animation:pulse 1.4s infinite;}
+        .archive-head button{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px;}
+        .archive-head button:hover{color:var(--text);}
+        .archive-toolbar{padding:10px 14px 6px;border-bottom:1px solid var(--line);shrink:0;}
+        .search-wrap{
+            position:relative;display:flex;align-items:center;
+            background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+            transition:border-color .15s, box-shadow .15s;
+        }
+        .search-wrap:focus-within{border-color:var(--phosphor-dim);box-shadow:0 0 0 3px var(--phosphor-glow);}
+        .search-wrap svg.search-icon{position:absolute;left:10px;width:14px;height:14px;color:var(--text-dim);pointer-events:none;}
+        .archive-search{
+            flex:1;background:transparent;border:none;outline:none;
+            padding:8px 32px 8px 32px;color:var(--text);font-family:var(--mono);font-size:12.5px;
+            width:100%;
+        }
+        .archive-search::placeholder{color:var(--text-dim);}
+        .search-clear{
+            position:absolute;right:5px;background:none;border:none;color:var(--text-dim);
+            cursor:pointer;padding:5px;border-radius:6px;display:none;align-items:center;justify-content:center;
+        }
+        .search-clear.show{display:flex;}
+        .search-clear:hover{color:var(--red);background:rgba(255,59,92,.1);}
+        .search-meta{
+            font-family:var(--mono);font-size:10.5px;color:var(--text-dim);
+            padding:6px 2px 4px;display:flex;justify-content:space-between;
+        }
+        .search-meta b{color:var(--phosphor);font-weight:600;}
+        #archive-list{flex:1;overflow-y:auto;padding:6px 10px 10px;display:flex;flex-direction:column;gap:8px;}
+        .arch-item{
+            background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+            cursor:pointer;transition:border-color .15s,background .15s,transform .1s;position:relative;
+        }
+        .arch-item:hover{border-color:var(--phosphor-dim);background:rgba(57,255,176,0.06);transform:translateY(-1px);}
+        .arch-item.is-new{animation:flashIn .9s ease-out;}
+        @keyframes flashIn{0%{background:rgba(57,255,176,.22);border-color:var(--phosphor);}100%{background:var(--panel-2);}}
+        .arch-item .meta{display:flex;justify-content:space-between;margin-bottom:5px;align-items:center;}
+        .arch-item .time{color:var(--phosphor);font-family:var(--mono);font-size:11px;}
+        .arch-item .right-meta{display:flex;align-items:center;gap:8px;}
+        .arch-item .len{color:var(--text-dim);font-family:var(--mono);font-size:11px;}
+        .arch-item .del-btn{
+            background:none;border:none;color:var(--text-dim);cursor:pointer;padding:2px;
+            display:flex;align-items:center;border-radius:4px;
+        }
+        .arch-item .del-btn:hover{color:var(--red);background:rgba(255,59,92,.12);}
+        .arch-item .prev{color:#d3cfeb;font-family:var(--mono);font-size:11.5px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        body.light-mode .arch-item .prev{color:#4a4470;}
+        .arch-item .prev mark{background:rgba(255,201,60,.4);color:inherit;border-radius:3px;padding:0 1px;}
+        .arch-item .lang-tag{
+            display:inline-block;margin-top:5px;font-size:10px;font-family:var(--mono);
+            color:var(--blue);background:rgba(51,198,255,.12);border:1px solid rgba(51,198,255,.3);
+            padding:1px 6px;border-radius:5px;
+        }
+        .empty-hint{color:var(--text-dim);font-size:13px;text-align:center;padding:40px 20px;}
+
+        /* ---------- TOASTS ---------- */
+        #toast-wrap{position:fixed;top:14px;right:14px;z-index:60;display:flex;flex-direction:column;gap:8px;
+            padding-top:env(safe-area-inset-top);max-width:min(320px, calc(100vw - 28px));}
+        .toast{
+            background:var(--panel);border:1px solid var(--phosphor-dim);color:var(--text);
+            font-family:var(--mono);font-size:12.5px;padding:9px 14px;border-radius:8px;
+            box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:8px;
+            animation:toastIn .2s ease-out;
+        }
+        .toast.err{border-color:#7a2329;}
+        .toast .tdot{width:6px;height:6px;border-radius:50%;background:var(--phosphor);shrink:0;}
+        .toast.err .tdot{background:var(--red);}
+        @keyframes toastIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+
+        /* ---------- CUSTOM MODAL (alert/confirm yerine) ---------- */
+        #modal-overlay{
+            position:fixed;inset:0;z-index:80;background:rgba(4,3,8,.72);backdrop-filter:blur(4px);
+            display:none;align-items:center;justify-content:center;padding:20px;
+        }
+        #modal-box{
+            width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line-bright);
+            border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(57,255,176,.06);
+            animation:modalIn .18s ease-out;overflow:hidden;
+        }
+        @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+        #modal-box .m-icon{
+            width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+            margin:18px 0 0 18px;
+        }
+        #modal-box .m-icon.warn{background:rgba(255,201,60,.14);color:var(--amber);}
+        #modal-box .m-icon.danger{background:rgba(255,59,92,.14);color:var(--red);}
+        #modal-box .m-icon svg{width:19px;height:19px;}
+        #modal-title{font-size:15px;font-weight:700;margin:12px 18px 4px;color:var(--text);}
+        #modal-msg{font-size:13px;color:var(--text-dim);margin:0 18px 18px;line-height:1.5;font-family:var(--ui);}
+        #modal-actions{display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--line);background:var(--panel-2);}
+        #modal-actions button{
+            flex:1;padding:9px 12px;border-radius:8px;font-family:var(--ui);font-size:13px;font-weight:600;
+            cursor:pointer;transition:filter .12s, transform .08s;
+        }
+        #modal-actions button:active{transform:scale(.97);}
+        #modal-cancel{background:var(--panel);border:1px solid var(--line);color:var(--text);}
+        #modal-cancel:hover{border-color:var(--line-bright);}
+        #modal-confirm{background:linear-gradient(135deg,var(--red),#ff7a5c);border:1px solid var(--red);color:#1a0004;}
+        #modal-confirm.safe{background:linear-gradient(135deg,var(--phosphor),var(--cyan));border-color:var(--phosphor);color:#04140d;}
+        #modal-confirm:hover{filter:brightness(1.08);}
+
+        /* fullscreen mode */
+        .fs-mode header{display:none;}
+        .fs-mode main{max-width:none;padding:0;height:100vh;}
+        .fs-mode .editor-shell{border-radius:0;border:none;height:100vh;}
+
+        @media(prefers-reduced-motion: reduce){
+            .status-dot, .saving .sdot, .live-badge .dot, .term-title{animation:none;}
+            .icon-btn, .btn, .arch-item, select{transition:none;}
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-wrap"></div>
+
+<header>
+    <div class="term-bar">
+        <div class="dots"><span class="d-red"></span><span class="d-amber"></span><span class="d-green"></span></div>
+        <span class="term-title">KOD PANELİ</span>
+        <div class="header-pills">
+            <span class="status-pill online-pill" data-tip="Şu anda bağlı olan cihazlar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                <span id="online-count">1</span>
+            </span>
+            <span class="status-pill"><span class="status-dot" id="status-dot"></span><span id="status-text">bağlı</span></span>
+        </div>
+    </div>
+    <div class="toolbar">
+        <select id="lang-select" title="Dil / sözdizimi rengi"></select>
+
+        <button class="icon-btn" id="wrap-btn" data-tip="Satır kaydırma" onclick="uiClick(); toggleWrap()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h11a3 3 0 010 6h-2m0 0l2-2m-2 2l2 2M4 18h5"/></svg>
+        </button>
+        <button class="icon-btn" data-tip="Küçült" onclick="uiClick(); changeFont(-1)">A-</button>
+        <button class="icon-btn" data-tip="Büyüt" onclick="uiClick(); changeFont(1)">A+</button>
+        <button class="icon-btn" data-tip="Ara (Ctrl/Cmd+F)" onclick="uiClick(); cm.execCommand('find')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
+        <button class="icon-btn" id="autofmt-btn" data-tip="Yeniden girinti" onclick="reindentAll()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4v16M8 4l4 4M8 4L4 8M16 20V4M16 20l4-4M16 20l-4-4"/></svg>
+        </button>
+        <button class="icon-btn" data-tip="Kodu temizle" onclick="clearCode()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/></svg>
+        </button>
+        <button class="icon-btn" id="lock-btn" data-tip="Kodu kilitle" onclick="toggleLock()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="lock-icon"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        </button>
+
+        <div class="spacer"></div>
+
+        <button class="icon-btn" id="theme-btn" data-tip="Aydınlık / karanlık mod" onclick="toggleTheme()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="theme-icon"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+        <button class="icon-btn" id="sound-btn" data-tip="Ses efektleri" onclick="toggleSound()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="sound-icon"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>
+        </button>
+        <button class="icon-btn" id="fs-btn" data-tip="Tam ekran (Ctrl/Cmd+Enter)" onclick="uiClick(); toggleFullscreen()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+        <button class="icon-btn" onclick="openArchive()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14M5 8a2 2 0 01-2-2V4a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+            <span>Arşiv</span>
+        </button>
+        <button class="icon-btn" onclick="copyCode()" id="copy-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span id="copy-text">Kopyala</span>
+        </button>
+        <button class="btn primary" onclick="downloadFile()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span id="dl-label">indir</span>
+        </button>
+
+        <div class="lock-banner" id="lock-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+            <span>Panel kilitli — düzenlemek için önce kilidi açın.</span>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="editor-shell" id="editor-shell">
+        <textarea id="code-input"></textarea>
+        <div class="status-bar">
+            <span>satır <b id="pos-line">1</b>, sütun <b id="pos-col">1</b></span>
+            <span><b id="char-count">0</b> karakter</span>
+            <span><b id="word-count">0</b> kelime</span>
+            <span><b id="line-count">1</b> satır</span>
+            <span id="lang-badge" style="color:var(--phosphor);"></span>
+            <span class="lock-flag" id="lock-flag">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+                kilitli
+            </span>
+            <div class="spacer"></div>
+            <span class="saving" id="saving-ind"><span class="sdot"></span>kaydediliyor…</span>
+        </div>
+    </div>
+</main>
+
+<footer>Firebase Realtime Database ile anlık senkronizasyon · son 20 versiyon canlı arşivlenir · <kbd>Ctrl/Cmd+F</kbd> ara · <kbd>Ctrl/Cmd+Enter</kbd> tam ekran · <kbd>/</kbd> arşivde ara</footer>
+
+<div id="archive-overlay" style="display:none;" onclick="closeArchive()"></div>
+<div id="archive-panel" style="display:none;">
+    <div class="archive-head">
+        <h2>Kod Arşivi <span class="live-badge"><span class="dot"></span>canlı</span></h2>
+        <div style="display:flex;align-items:center;gap:4px;">
+            <button data-tip="Tüm arşivi temizle" onclick="clearAllHistory()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/></svg>
+            </button>
+            <button onclick="closeArchive()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+    <div class="archive-toolbar">
+        <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="archive-search" class="archive-search" placeholder="Arşivde ara… (kod veya dil)" oninput="renderArchiveList()" autocomplete="off">
+            <button class="search-clear" id="search-clear-btn" onclick="clearArchiveSearch()" data-tip="Temizle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="search-meta">
+            <span id="search-result-count"></span>
+            <span id="search-total-count"></span>
+        </div>
+    </div>
+    <div id="archive-list"><p class="empty-hint">Henüz arşivlenmiş versiyon yok.</p></div>
+</div>
+
+<!-- ---------- Özel onay/uyarı penceresi (native alert/confirm yerine) ---------- -->
+<div id="modal-overlay">
+    <div id="modal-box">
+        <div class="m-icon warn" id="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        </div>
+        <div id="modal-title">Emin misiniz?</div>
+        <p id="modal-msg">Bu işlem geri alınamaz.</p>
+        <div id="modal-actions">
+            <button id="modal-cancel">Vazgeç</button>
+            <button id="modal-confirm">Onayla</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ---------------- Firebase ---------------- */
+    const firebaseConfig = {
+        apiKey: "AIzaSyBV7jtoXPBcPdclcBseOK39wJsSXUxLpg4",
+        databaseURL: "https://atamossocket-default-rtdb.firebaseio.com",
+        projectId: "atamossocket"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const MAX_HISTORY = 20;
+
+    /* ---------------- Sunucu yapısı ----------------
+       - sharedCode kök seviyede KALIR (değiştirilmedi), böylece bu paneli
+         okuyan/yazan diğer araçlar (ör. s.py betiği, başka istemciler)
+         etkilenmez.
+       - Geri kalan her şey (geçmiş, dil, kilit, çevrimiçi kullanıcılar)
+         artık tek bir "codeSettings" kökü altında toplanıyor:
+           codeSettings/history/*
+           codeSettings/language
+           codeSettings/locked
+           codeSettings/presence/*
+       - Eski kök yollarda (codeHistory / codeLanguage) veri varsa,
+         codeSettings henüz oluşturulmamışsa otomatik olarak bir kerelik
+         taşınır, hiçbir kayıt kaybolmaz. */
+    const codeRef = db.ref('sharedCode');
+    const settingsRoot = db.ref('codeSettings');
+    const historyRef = db.ref('codeSettings/history');
+    const langRef = db.ref('codeSettings/language');
+    const lockRef = db.ref('codeSettings/locked');
+    const presenceRef = db.ref('codeSettings/presence');
+
+    function migrateLegacyData(){
+        settingsRoot.once('value').then(snap=>{
+            if(snap.exists()) return; // codeSettings zaten var, taşımaya gerek yok
+            Promise.all([
+                db.ref('codeHistory').once('value'),
+                db.ref('codeLanguage').once('value')
+            ]).then(([hSnap, lSnap])=>{
+                const updates = {};
+                if(hSnap.exists()) updates['codeSettings/history'] = hSnap.val();
+                if(lSnap.exists()) updates['codeSettings/language'] = lSnap.val();
+                if(Object.keys(updates).length) db.ref().update(updates);
+            }).catch(()=>{ /* eski yol yoksa sorun değil */ });
+        }).catch(()=>{});
+    }
+    migrateLegacyData();
+
+    /* ---------------- Özel Modal (alert/confirm yerine) ---------------- */
+    const Modal = (() => {
+        const overlay = document.getElementById('modal-overlay');
+        const titleEl = document.getElementById('modal-title');
+        const msgEl = document.getElementById('modal-msg');
+        const cancelBtn = document.getElementById('modal-cancel');
+        const confirmBtn = document.getElementById('modal-confirm');
+        const iconEl = document.getElementById('modal-icon');
+        let resolver = null;
+
+        function close(result){
+            overlay.style.display = 'none';
+            document.removeEventListener('keydown', onKey);
+            if(resolver){ resolver(result); resolver = null; }
+        }
+        function onKey(e){
+            if(e.key === 'Escape') close(false);
+            if(e.key === 'Enter') close(true);
+        }
+        overlay.addEventListener('click', e=>{ if(e.target === overlay) close(false); });
+        cancelBtn.addEventListener('click', ()=> close(false));
+        confirmBtn.addEventListener('click', ()=> close(true));
+
+        function confirm({title='Emin misiniz?', message='Bu işlem geri alınamaz.', confirmText='Onayla', cancelText='Vazgeç', danger=true}={}){
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            confirmBtn.textContent = confirmText;
+            cancelBtn.textContent = cancelText;
+            confirmBtn.classList.toggle('safe', !danger);
+            iconEl.className = 'm-icon ' + (danger ? 'danger' : 'warn');
+            overlay.style.display = 'flex';
+            document.addEventListener('keydown', onKey);
+            confirmBtn.focus();
+            return new Promise(res=>{ resolver = res; });
+        }
+        return { confirm };
+    })();
+
+    /* ---------------- Ses motoru (Web Audio API, dosya gerektirmez) ---------------- */
+    const SoundEngine = (() => {
+        let ctx = null;
+        let enabled = true;
+        function ensureCtx(){
+            if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if(ctx.state === 'suspended') ctx.resume();
+            return ctx;
+        }
+        function tone(freq, dur, type='sine', gainPeak=0.06, delay=0, glideTo=null){
+            if(!enabled) return;
+            try{
+                const c = ensureCtx();
+                const t0 = c.currentTime + delay;
+                const osc = c.createOscillator();
+                const gain = c.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, t0);
+                if(glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t0 + dur);
+                gain.gain.setValueAtTime(0.0001, t0);
+                gain.gain.exponentialRampToValueAtTime(gainPeak, t0 + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                osc.connect(gain).connect(c.destination);
+                osc.start(t0);
+                osc.stop(t0 + dur + 0.02);
+            }catch(e){/* sessizce yoksay */}
+        }
+        return {
+            setEnabled(v){ enabled = v; },
+            isEnabled(){ return enabled; },
+            click(){ tone(1050, 0.045, 'square', 0.035); },
+            toggleOn(){ tone(720, 0.05, 'triangle', 0.05); tone(1080, 0.05, 'triangle', 0.045, 0.045); },
+            toggleOff(){ tone(560, 0.05, 'triangle', 0.05); },
+            success(){ tone(660, 0.07, 'sine', 0.06); tone(990, 0.09, 'sine', 0.06, 0.06); },
+            error(){ tone(220, 0.16, 'sawtooth', 0.05, 0, 140); },
+            connect(){ tone(880, 0.08, 'sine', 0.05); tone(1320, 0.1, 'sine', 0.045, 0.07); },
+            disconnect(){ tone(440, 0.14, 'sine', 0.05, 0, 180); },
+            archive(){ tone(500, 0.05, 'triangle', 0.045); tone(760, 0.06, 'triangle', 0.04, 0.04); },
+            trash(){ tone(300, 0.05, 'sawtooth', 0.05); tone(150, 0.09, 'sawtooth', 0.05, 0.04); },
+            lock(){ tone(180, 0.09, 'square', 0.05); tone(120, 0.12, 'square', 0.05, 0.06); },
+            unlock(){ tone(500, 0.06, 'square', 0.05); tone(760, 0.08, 'square', 0.045, 0.05); }
+        };
+    })();
+    function toggleSound(){
+        const on = !SoundEngine.isEnabled();
+        SoundEngine.setEnabled(on);
+        const btn = document.getElementById('sound-btn');
+        btn.classList.toggle('sound-off', !on);
+        btn.classList.toggle('active', on);
+        document.getElementById('sound-icon').innerHTML = on
+            ? '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/>'
+            : '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/>';
+        if(on){ SoundEngine.setEnabled(true); SoundEngine.toggleOn(); }
+        else { SoundEngine.setEnabled(false); }
+        toast(on ? 'Ses efektleri açık' : 'Ses efektleri kapalı');
+    }
+    function uiClick(){ SoundEngine.click(); }
+    document.getElementById('sound-btn').classList.add('active');
+
+    /* ---------------- Aydınlık / karanlık mod ---------------- */
+    let lightMode = false;
+    function toggleTheme(){
+        uiClick();
+        lightMode = !lightMode;
+        document.body.classList.toggle('light-mode', lightMode);
+        document.getElementById('theme-btn').classList.toggle('active', lightMode);
+        document.getElementById('theme-icon').innerHTML = lightMode
+            ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+            : '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+        cm.refresh();
+        toast(lightMode ? 'Aydınlık mod açık' : 'Karanlık mod açık');
+    }
+
+    /* ---------------- Diller ---------------- */
+    const LANGS = [
+        {id:'python', label:'Python', mode:'python', ext:'py'},
+        {id:'javascript', label:'JavaScript', mode:'javascript', ext:'js'},
+        {id:'typescript', label:'TypeScript', mode:{name:'javascript', typescript:true}, ext:'ts'},
+        {id:'html', label:'HTML', mode:'htmlmixed', ext:'html'},
+        {id:'css', label:'CSS', mode:'css', ext:'css'},
+        {id:'json', label:'JSON', mode:{name:'javascript', json:true}, ext:'json'},
+        {id:'cpp', label:'C / C++', mode:'text/x-c++src', ext:'cpp'},
+        {id:'java', label:'Java', mode:'text/x-java', ext:'java'},
+        {id:'sql', label:'SQL', mode:'sql', ext:'sql'},
+        {id:'shell', label:'Shell', mode:'shell', ext:'sh'},
+        {id:'yaml', label:'YAML', mode:'yaml', ext:'yaml'},
+        {id:'markdown', label:'Markdown', mode:'markdown', ext:'md'},
+        {id:'plain', label:'Düz metin', mode:null, ext:'txt'}
+    ];
+    const langSelect = document.getElementById('lang-select');
+    LANGS.forEach(l=>{
+        const o = document.createElement('option');
+        o.value = l.id; o.textContent = l.label;
+        langSelect.appendChild(o);
+    });
+
+    /* ---------------- CodeMirror ---------------- */
+    const cm = CodeMirror.fromTextArea(document.getElementById('code-input'), {
+        lineNumbers:true,
+        theme:'dracula',
+        mode:'python',
+        tabSize:4,
+        indentUnit:4,
+        indentWithTabs:false,
+        lineWrapping:false,
+        matchBrackets:true,
+        autoCloseBrackets:true,
+        styleActiveLine:true,
+        foldGutter:true,
+        gutters:['CodeMirror-linenumbers','CodeMirror-foldgutter'],
+        extraKeys:{'Tab': cmInst => cmInst.replaceSelection('    ')}
+    });
+    cm.setSize('100%','100%');
+    let fontSize = 14;
+    setFont(fontSize);
+    function setFont(px){
+        document.querySelectorAll('.CodeMirror').forEach(el=> el.style.fontSize = px+'px');
+        cm.refresh();
+    }
+    function changeFont(delta){
+        fontSize = Math.max(10, Math.min(24, fontSize+delta));
+        setFont(fontSize);
+    }
+    function toggleWrap(){
+        const on = !cm.getOption('lineWrapping');
+        cm.setOption('lineWrapping', on);
+        document.getElementById('wrap-btn').classList.toggle('active', on);
+    }
+    function reindentAll(){
+        if(isLocked){ warnLocked(); return; }
+        uiClick();
+        cm.operation(()=>{
+            for(let i=0;i<cm.lineCount();i++) cm.indentLine(i);
+        });
+        toast('Girintiler yeniden düzenlendi');
+    }
+
+    function currentLang(){
+        return LANGS.find(l=>l.id===langSelect.value) || LANGS[0];
+    }
+    function applyLang(id, fromRemote){
+        const l = LANGS.find(x=>x.id===id) || LANGS[0];
+        langSelect.value = l.id;
+        cm.setOption('mode', l.mode);
+        document.getElementById('lang-badge').textContent = l.label;
+        document.getElementById('dl-label').textContent = 'indir (.'+l.ext+')';
+        if(!fromRemote) langRef.set(l.id);
+    }
+    applyLang('python', true);
+    langSelect.addEventListener('change', ()=>{ uiClick(); applyLang(langSelect.value, false); });
+
+    /* ---------------- Kilit (kod kilitleme) ---------------- */
+    let isLocked = false;
+    function toggleLock(){
+        uiClick();
+        lockRef.set(!isLocked);
+    }
+    function warnLocked(){
+        SoundEngine.error();
+        toast('Panel kilitli — önce kilidi açın', true);
+    }
+    function applyLockUI(){
+        const shell = document.getElementById('editor-shell');
+        const btn = document.getElementById('lock-btn');
+        const icon = document.getElementById('lock-icon');
+        const banner = document.getElementById('lock-banner');
+        const flag = document.getElementById('lock-flag');
+        cm.setOption('readOnly', isLocked ? 'nocursor' : false);
+        shell.classList.toggle('is-locked', isLocked);
+        btn.classList.toggle('lock-active', isLocked);
+        btn.setAttribute('data-tip', isLocked ? 'Kilidi aç' : 'Kodu kilitle');
+        banner.classList.toggle('show', isLocked);
+        flag.classList.toggle('show', isLocked);
+        icon.innerHTML = isLocked
+            ? '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/><circle cx="12" cy="16" r="1.5"/>'
+            : '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V9a4 4 0 017.6-1.8"/>';
+        ['clear-btn'].forEach(()=>{});
+    }
+
+    /* ---------------- Senkronizasyon ---------------- */
+    let isRemoteUpdate = false;
+    let lastSnapshotValue = '';
+    let snapshotTimer = null;
+    let firstConnectDone = false;
+
+    function attachListeners(){
+        codeRef.on('value', snap => {
+            const val = snap.val();
+            if(val !== null && val !== cm.getValue()){
+                isRemoteUpdate = true;
+                const cursor = cm.getCursor();
+                cm.setValue(val);
+                cm.setCursor(cursor);
+                isRemoteUpdate = false;
+                updateCounts();
+            }
+            setConnected(true);
+        }, () => setConnected(false));
+
+        langRef.on('value', snap=>{
+            const v = snap.val();
+            if(v) applyLang(v, true);
+        });
+
+        lockRef.on('value', snap=>{
+            const wasLocked = isLocked;
+            isLocked = !!snap.val();
+            applyLockUI();
+            if(wasLocked !== isLocked && firstConnectDone){
+                SoundEngine[isLocked ? 'lock' : 'unlock']();
+                toast(isLocked ? 'Panel kilitlendi' : 'Kilit açıldı');
+            }
+        });
+
+        attachHistoryListeners();
+        attachPresence();
+    }
+    attachListeners();
+
+    cm.on('change', () => {
+        updateCounts();
+        if(isRemoteUpdate) return;
+        if(isLocked) return; // güvenlik: readOnly zaten engelliyor, ekstra koruma
+        const text = cm.getValue();
+        codeRef.set(text);
+        scheduleSnapshot(text);
+        showSaving();
+    });
+    cm.on('cursorActivity', updateCounts);
+
+    function updateCounts(){
+        const text = cm.getValue();
+        document.getElementById('char-count').textContent = text.length;
+        document.getElementById('word-count').textContent = (text.trim().match(/\S+/g)||[]).length;
+        document.getElementById('line-count').textContent = cm.lineCount();
+        const c = cm.getCursor();
+        document.getElementById('pos-line').textContent = c.line+1;
+        document.getElementById('pos-col').textContent = c.ch+1;
+    }
+
+    let savingTimeout;
+    function showSaving(){
+        const el = document.getElementById('saving-ind');
+        el.classList.add('show');
+        clearTimeout(savingTimeout);
+        savingTimeout = setTimeout(()=> el.classList.remove('show'), 900);
+    }
+
+    function scheduleSnapshot(text){
+        clearTimeout(snapshotTimer);
+        snapshotTimer = setTimeout(()=> saveSnapshot(text), 2000);
+    }
+    function saveSnapshot(text){
+        if(!text || !text.trim() || text === lastSnapshotValue) return;
+        lastSnapshotValue = text;
+        historyRef.push().set({code:text, timestamp:Date.now(), lang: currentLang().id}).then(trimHistory);
+    }
+    function trimHistory(){
+        historyRef.orderByChild('timestamp').once('value', snap=>{
+            const keys=[];
+            snap.forEach(c=> keys.push(c.key));
+            const excess = keys.length - MAX_HISTORY;
+            for(let i=0;i<excess;i++) historyRef.child(keys[i]).remove();
+        });
+    }
+
+    function setConnected(ok){
+        const dot = document.getElementById('status-dot');
+        const txt = document.getElementById('status-text');
+        const wasOff = dot.classList.contains('off');
+        dot.classList.toggle('off', !ok);
+        txt.textContent = ok ? 'bağlı' : 'bağlantı yok';
+        if(!firstConnectDone){ firstConnectDone = true; return; }
+        if(ok && wasOff) SoundEngine.connect();
+        if(!ok && !wasOff) SoundEngine.disconnect();
+    }
+
+    /* ---------------- SÜRPRİZ ÖZELLİK: canlı çevrimiçi kullanıcı sayacı ----------------
+       Firebase'in .info/connected özel yolu ve onDisconnect() ile her sekme/cihaz
+       kendini codeSettings/presence altına kaydeder, bağlantı koptuğunda otomatik
+       silinir. Panelin üstünde o anda kaç kişinin panele bağlı olduğunu canlı
+       gösterir — ortak kod oturumlarında kaç kişinin aynı anda çalıştığını
+       görmek için küçük ama işe yarar bir dokunuş. */
+    const clientId = 'c_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    function attachPresence(){
+        const myPresenceRef = presenceRef.child(clientId);
+        db.ref('.info/connected').on('value', snap=>{
+            if(snap.val() === true){
+                myPresenceRef.onDisconnect().remove();
+                myPresenceRef.set(true);
+            }
+        });
+        presenceRef.on('value', snap=>{
+            const count = snap.exists() ? snap.numChildren() : 1;
+            document.getElementById('online-count').textContent = Math.max(1, count);
+        });
+        window.addEventListener('beforeunload', ()=>{ myPresenceRef.remove(); });
+    }
+
+    /* ---------------- Arşiv: gerçek zamanlı, sağlam senkronizasyon ---------------- */
+    let archiveItems = [];
+    let knownArchiveKeys = new Set();
+    let archiveFirstLoad = true;
+
+    function attachHistoryListeners(){
+        historyRef.on('value', snap=>{
+            const items = [];
+            snap.forEach(c=>{
+                const v = c.val() || {};
+                items.push({key:c.key, code:v.code||'', timestamp:v.timestamp||0, lang:v.lang||''});
+            });
+            items.sort((a,b)=> b.timestamp - a.timestamp);
+
+            const newKeys = new Set(items.map(i=>i.key));
+            const freshlyAdded = archiveFirstLoad ? new Set() : new Set([...newKeys].filter(k=>!knownArchiveKeys.has(k)));
+            knownArchiveKeys = newKeys;
+            archiveItems = items;
+            renderArchiveList(freshlyAdded);
+            archiveFirstLoad = false;
+        }, err=>{
+            console.error('codeSettings/history dinlenemedi:', err);
+            toast('Arşiv bağlantısında sorun oluştu', true);
+        });
+    }
+
+    /* ---------------- Arşiv paneli + geliştirilmiş arama ---------------- */
+    function escapeHtml(str){
+        const d = document.createElement('div');
+        d.innerText = str;
+        return d.innerHTML;
+    }
+    function highlightMatch(text, q){
+        if(!q) return escapeHtml(text);
+        const idx = text.toLowerCase().indexOf(q.toLowerCase());
+        if(idx === -1) return escapeHtml(text);
+        return escapeHtml(text.slice(0, idx)) + '<mark>' + escapeHtml(text.slice(idx, idx+q.length)) + '</mark>' + escapeHtml(text.slice(idx+q.length));
+    }
+    function clearArchiveSearch(){
+        const input = document.getElementById('archive-search');
+        input.value = '';
+        input.focus();
+        renderArchiveList();
+    }
+    function renderArchiveList(freshlyAdded){
+        const list = document.getElementById('archive-list');
+        const q = (document.getElementById('archive-search')?.value || '').trim();
+        const qLower = q.toLowerCase();
+        document.getElementById('search-clear-btn').classList.toggle('show', q.length>0);
+
+        let items = archiveItems;
+        if(qLower){
+            items = items.filter(item=>{
+                const langLabel = (LANGS.find(l=>l.id===item.lang)||{}).label || '';
+                return (item.code||'').toLowerCase().includes(qLower) || langLabel.toLowerCase().includes(qLower);
             });
         }
 
-        function downloadPythonFile() {
-            const codeContent = codeInput.value;
-            const blob = new Blob([codeContent], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 's.py';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+        const resultEl = document.getElementById('search-result-count');
+        const totalEl = document.getElementById('search-total-count');
+        if(q){
+            resultEl.textContent = items.length + ' / ' + archiveItems.length + ' sonuç eşleşti';
+        }else{
+            resultEl.textContent = '';
         }
-    </script>
+        totalEl.textContent = archiveItems.length + ' versiyon arşivde';
+
+        if(items.length===0){
+            list.innerHTML = `<p class="empty-hint">${q ? 'Eşleşen versiyon yok. Farklı bir kelime deneyin.' : 'Henüz arşivlenmiş versiyon yok.'}</p>`;
+            return;
+        }
+        list.innerHTML = items.map(item=>{
+            const d = new Date(item.timestamp);
+            const dateStr = isNaN(d.getTime()) ? '—' : d.toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+            const rawPreview = (item.code||'').replace(/\n/g,' ').slice(0,80) || '(boş)';
+            const preview = highlightMatch(rawPreview, q);
+            const langLabel = (LANGS.find(l=>l.id===item.lang)||{}).label || '';
+            const isNew = freshlyAdded && freshlyAdded.has(item.key);
+            return `<div class="arch-item ${isNew?'is-new':''}" data-key="${item.key}" onclick="restoreVersion('${item.key}')">
+      <div class="meta">
+        <span class="time">${dateStr}</span>
+        <span class="right-meta">
+          <span class="len">${(item.code||'').length} kr</span>
+          <button class="del-btn" title="Bu versiyonu sil" onclick="event.stopPropagation(); deleteVersion('${item.key}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/></svg>
+          </button>
+        </span>
+      </div>
+      <div class="prev">${preview}</div>
+      ${langLabel ? `<span class="lang-tag">${langLabel}</span>` : ''}
+    </div>`;
+        }).join('');
+    }
+    function restoreVersion(key){
+        if(isLocked){ warnLocked(); return; }
+        const data = archiveItems.find(i=>i.key===key);
+        if(!data) return;
+        cm.setValue(data.code);
+        codeRef.set(data.code);
+        if(data.lang) applyLang(data.lang, false);
+        lastSnapshotValue = data.code;
+        closeArchive();
+        SoundEngine.success();
+        toast('Versiyon geri yüklendi');
+    }
+    async function deleteVersion(key){
+        const ok = await Modal.confirm({
+            title:'Versiyon silinsin mi?',
+            message:'Bu arşiv kaydı kalıcı olarak silinecek. Bu işlem geri alınamaz.',
+            confirmText:'Sil', cancelText:'Vazgeç', danger:true
+        });
+        if(!ok) return;
+        try{
+            await historyRef.child(key).remove();
+            SoundEngine.trash();
+            toast('Versiyon silindi');
+        }catch(e){
+            SoundEngine.error();
+            toast('Silinemedi', true);
+        }
+    }
+    async function clearAllHistory(){
+        uiClick();
+        if(archiveItems.length===0){ toast('Arşiv zaten boş'); return; }
+        const ok = await Modal.confirm({
+            title:'Tüm arşiv temizlensin mi?',
+            message:`${archiveItems.length} kayıtlı versiyonun tamamı kalıcı olarak silinecek.`,
+            confirmText:'Tümünü sil', cancelText:'Vazgeç', danger:true
+        });
+        if(!ok) return;
+        try{
+            await historyRef.remove();
+            SoundEngine.trash();
+            toast('Arşiv temizlendi');
+        }catch(e){
+            SoundEngine.error();
+            toast('Arşiv temizlenemedi', true);
+        }
+    }
+    function openArchive(){
+        uiClick();
+        document.getElementById('archive-overlay').style.display='block';
+        document.getElementById('archive-panel').style.display='flex';
+        renderArchiveList();
+        SoundEngine.archive();
+        setTimeout(()=> document.getElementById('archive-search').focus(), 80);
+    }
+    function closeArchive(){
+        uiClick();
+        document.getElementById('archive-overlay').style.display='none';
+        document.getElementById('archive-panel').style.display='none';
+    }
+    document.addEventListener('keydown', e=>{
+        const panelOpen = document.getElementById('archive-panel').style.display==='flex';
+        if(!panelOpen) return;
+        if(e.key === 'Escape'){ closeArchive(); }
+        if(e.key === '/' && document.activeElement.id !== 'archive-search'){
+            e.preventDefault();
+            document.getElementById('archive-search').focus();
+        }
+    });
+
+    /* ---------------- Araçlar ---------------- */
+    function copyCode(){
+        uiClick();
+        navigator.clipboard.writeText(cm.getValue()).then(()=>{
+            const t = document.getElementById('copy-text');
+            t.textContent = 'Kopyalandı!';
+            setTimeout(()=> t.textContent='Kopyala', 1500);
+            SoundEngine.success();
+            toast('Kod panoya kopyalandı');
+        }).catch(()=>{ SoundEngine.error(); toast('Kopyalanamadı', true); });
+    }
+    function downloadFile(){
+        uiClick();
+        const l = currentLang();
+        const blob = new Blob([cm.getValue()], {type:'text/plain;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'kod.' + l.ext;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        SoundEngine.success();
+        toast('kod.' + l.ext + ' indirildi');
+    }
+    async function clearCode(){
+        uiClick();
+        if(isLocked){ warnLocked(); return; }
+        if(!cm.getValue().trim()) return;
+        const ok = await Modal.confirm({
+            title:'Tüm kod silinsin mi?',
+            message:'Bu işlem editördeki kodu temizler ve tüm bağlı cihazları anında etkiler.',
+            confirmText:'Temizle', cancelText:'Vazgeç', danger:true
+        });
+        if(!ok) return;
+        cm.setValue('');
+        SoundEngine.trash();
+        toast('Kod temizlendi');
+    }
+    let isFullscreen = false;
+    function toggleFullscreen(){
+        isFullscreen = !isFullscreen;
+        document.body.classList.toggle('fs-mode', isFullscreen);
+        cm.refresh();
+    }
+    document.addEventListener('keydown', e=>{
+        if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ toggleFullscreen(); }
+    });
+
+    /* ---------------- Toast ---------------- */
+    function toast(msg, isError){
+        const wrap = document.getElementById('toast-wrap');
+        const el = document.createElement('div');
+        el.className = 'toast' + (isError ? ' err' : '');
+        el.innerHTML = `<span class="tdot"></span>${msg}`;
+        wrap.appendChild(el);
+        setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .25s'; setTimeout(()=>el.remove(),250); }, 2200);
+    }
+
+    updateCounts();
+</script>
 </body>
 </html>
