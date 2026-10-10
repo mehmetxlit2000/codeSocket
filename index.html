@@ -315,26 +315,7 @@
         }
         [data-tip]:hover::after{opacity:1;transform:translateX(-50%) translateY(0);}
 
-        /* ---------- SEKMELER ---------- */
-        #tab-bar{display:flex;align-items:flex-end;gap:6px;padding:8px 10px 0;background:var(--panel-2);border-bottom:1px solid var(--line);overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
-        #tab-bar::-webkit-scrollbar{display:none;}
-        .tab{position:relative;display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;color:var(--text-dim);background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;padding:8px 8px 8px 12px;cursor:pointer;white-space:nowrap;max-width:210px;transition:color .15s,border-color .15s,background .15s,transform .08s;}
-        .tab:hover{color:var(--text);border-color:var(--line-bright);background:var(--panel-2);}
-        .tab:active{transform:scale(.97);}
-        .tab.active{color:var(--accent);background:var(--accent-soft-bg-2);border-color:var(--accent-soft-border-2);font-weight:700;}
-        .tab.active::after{content:'';position:absolute;left:10px;right:10px;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--phosphor),var(--cyan));box-shadow:0 0 8px var(--phosphor-glow);}
-        .tab svg{width:13px;height:13px;flex-shrink:0;}
-        .tab .tab-name{overflow:hidden;text-overflow:ellipsis;}
-        .tab.main-tab{padding-right:14px;}
-        .tab-act{display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:none;border:none;color:inherit;cursor:pointer;padding:0;opacity:.6;transition:opacity .12s,background .12s,color .12s;}
-        .tab-act:hover{opacity:1;background:rgba(128,128,128,.2);}
-        .tab-act.close:hover{color:var(--red);background:rgba(255,23,68,.15);}
-        .tab-act svg{width:11px;height:11px;}
-        .tab-rename{font-family:var(--mono);font-size:12px;width:110px;background:#000;color:var(--phosphor);border:1px solid var(--accent-soft-border-2);border-radius:5px;padding:2px 6px;outline:none;}
-        .tab-add{padding:8px 11px;color:var(--accent);border-style:dashed;}
-        .tab-add svg{width:12px;height:12px;}
-
-/* ---------- EDITOR ---------- */
+        /* ---------- EDITOR ---------- */
         main{
             max-width:1360px;width:100%;margin:0 auto;padding:0 16px 16px;
             flex:1;display:flex;flex-direction:column;min-height:0;
@@ -727,7 +708,7 @@
         }
 
         .cm-s-dracula .CodeMirror-gutters, .cm-s-dracula.CodeMirror {
-            background-color: #000 !important;
+             background-color: #000 !important;
             color: #f8f8f2 !important;
             border: none;
         }
@@ -824,7 +805,6 @@
 
 <main>
     <div class="editor-shell">
-        <div id="tab-bar"></div>
         <textarea id="code-input"></textarea>
         <div id="run-panel">
             <div class="run-head">
@@ -900,19 +880,10 @@
     const db = firebase.database();
     const MAX_HISTORY = 20;
 
+    const codeRef = db.ref('sharedCode');
     const codeSettingsRef = db.ref('codeSettings');
-    const tabCountRef = codeSettingsRef.child('tabCount');
-    const tabMetaRef = codeSettingsRef.child('tabMeta');
-    let tabMeta = {};
-    let currentTab = 0;
-    let tabCount = 1;
-    let codeRef, historyRef, langRef;
-    function bindTabRefs(i){
-        codeRef = db.ref(i === 0 ? 'sharedCode' : 'sharedCode' + i);
-        historyRef = codeSettingsRef.child(i === 0 ? 'history' : 'history' + i);
-        langRef = codeSettingsRef.child(i === 0 ? 'language' : 'language' + i);
-    }
-    bindTabRefs(0);
+    const historyRef = codeSettingsRef.child('history');
+    const langRef = codeSettingsRef.child('language');
     const presenceRootRef = codeSettingsRef.child('presence');
     const lockRef = codeSettingsRef.child('locked');
     const controlRef = codeSettingsRef.child('remoteControl');
@@ -1434,7 +1405,7 @@
     let snapshotTimer = null;
     let firstConnectDone = false;
 
-    function attachTabListeners(){
+    function attachListeners(){
         codeRef.on('value', snap => {
             const val = snap.val();
             if(val !== null && val !== cm.getValue()){
@@ -1453,147 +1424,14 @@
             if(v) applyLang(v, true);
         });
 
-        attachHistoryListeners();
-    }
-
-    function attachListeners(){
-        attachTabListeners();
         lockRef.on('value', snap=>{
             applyLockState(snap.val() === true);
         });
+
+        attachHistoryListeners();
         attachPresence();
-        tabCountRef.on('value', snap=>{
-            const v = parseInt(snap.val(), 10);
-            tabCount = v >= 1 ? v : 1;
-            renderTabs();
-        });
-        tabMetaRef.on('value', snap=>{
-            tabMeta = snap.val() || {};
-            if(currentTab !== 0 && !isTabOpen(currentTab)){ switchTab(0); return; }
-            renderTabs();
-        });
     }
     attachListeners();
-
-    /* ---------------- Sekmeler ---------------- */
-    const SVG_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
-    const ICON_HOME = SVG_OPEN + '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>';
-    const ICON_FILE = SVG_OPEN + '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>';
-    const ICON_EDIT = SVG_OPEN + '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>';
-    const ICON_X = SVG_OPEN + '<path d="M6 18L18 6M6 6l12 12"/></svg>';
-    const ICON_PLUS = SVG_OPEN + '<path d="M12 5v14M5 12h14"/></svg>';
-    let editingTab = null;
-
-    function tabLabel(i){
-        if(i === 0) return 'Ana';
-        const n = tabMeta[i] && tabMeta[i].name;
-        return n ? n : 'Sekme ' + i;
-    }
-    function isTabOpen(i){
-        return i === 0 || !(tabMeta[i] && tabMeta[i].closed);
-    }
-    function renderTabs(){
-        if(editingTab !== null) return; // isim yazılırken yeniden çizme
-        drawTabs();
-    }
-    function drawTabs(){
-        const bar = document.getElementById('tab-bar');
-        let html = '';
-        for(let i = 0; i < tabCount; i++){
-            if(!isTabOpen(i)) continue;
-            const active = i === currentTab;
-            if(i === 0){
-                html += `<div class="tab main-tab ${active ? 'active' : ''}" onclick="uiClick(); switchTab(0)">${ICON_HOME}<span class="tab-name">Suarez</span></div>`;
-                continue;
-            }
-            const nameHtml = editingTab === i
-                ? `<input id="tab-rename-input" class="tab-rename" maxlength="20" value="${escapeHtml(tabLabel(i)).replace(/"/g,'&quot;')}" onclick="event.stopPropagation()" onkeydown="renameKey(event, ${i})" onblur="finishRename(${i}, true)">`
-                : `<span class="tab-name">${escapeHtml(tabLabel(i))}</span>`;
-            const editBtn = (active && editingTab !== i)
-                ? `<button class="tab-act" title="İsim ver" onclick="event.stopPropagation(); startRename(${i}, event)">${ICON_EDIT}</button>` : '';
-            html += `<div class="tab ${active ? 'active' : ''}" onclick="uiClick(); switchTab(${i})" ondblclick="startRename(${i}, event)">${ICON_FILE}${nameHtml}${editBtn}<button class="tab-act close" title="Sekmeyi kapat" onclick="event.stopPropagation(); closeTab(${i}, event)">${ICON_X}</button></div>`;
-        }
-        html += `<button class="tab tab-add" title="Yeni sekme" onclick="addTab(event)">${ICON_PLUS}</button>`;
-        bar.innerHTML = html;
-        const inp = document.getElementById('tab-rename-input');
-        if(inp){ inp.focus(); inp.select(); }
-    }
-    function startRename(i, evt){
-        if(evt && !evt.isTrusted) return;
-        if(i === 0 || !isTabOpen(i)) return;
-        if(i !== currentTab) switchTab(i);
-        editingTab = i;
-        drawTabs();
-    }
-    function renameKey(e, i){
-        if(e.key === 'Enter'){ e.preventDefault(); finishRename(i, true); }
-        else if(e.key === 'Escape'){ e.preventDefault(); finishRename(i, false); }
-    }
-    function finishRename(i, save){
-        if(editingTab !== i) return;
-        const inp = document.getElementById('tab-rename-input');
-        const val = inp ? inp.value.trim().slice(0, 20) : '';
-        editingTab = null;
-        if(save){
-            tabMetaRef.child(i).child('name').set(val || null);
-            if(val) toast('Sekme adı: ' + val);
-        }
-        drawTabs();
-    }
-    async function closeTab(i, evt){
-        if(evt && !evt.isTrusted) return;
-        if(i === 0) return;
-        uiClick();
-        if(isLocked){ toast('Kod kilitliyken sekme kapatılamaz', true); return; }
-        const ok = await Modal.confirm({
-            title:'Sekme kapatılsın mı?',
-            message:'"' + tabLabel(i) + '" sekmesindeki kod ve arşiv kalıcı olarak silinecek.',
-            confirmText:'Kapat', cancelText:'Vazgeç', danger:true
-        });
-        if(!ok) return;
-        if(currentTab === i) switchTab(0);
-        try{
-            await Promise.all([
-                db.ref('sharedCode' + i).remove(),
-                codeSettingsRef.child('history' + i).remove(),
-                codeSettingsRef.child('language' + i).remove(),
-                tabMetaRef.child(i).set({closed:true})
-            ]);
-            SoundEngine.trash();
-            toast('Sekme kapatıldı');
-        }catch(e){
-            SoundEngine.error();
-            toast('Sekme kapatılamadı', true);
-        }
-    }
-    function switchTab(i){
-        if(i === currentTab) return;
-        codeRef.off(); langRef.off(); historyRef.off();
-        clearTimeout(snapshotTimer);
-        currentTab = i;
-        bindTabRefs(i);
-        isRemoteUpdate = true;
-        cm.setValue('');
-        cm.clearHistory();
-        isRemoteUpdate = false;
-        lastSnapshotValue = '';
-        archiveItems = []; knownArchiveKeys = new Set(); archiveFirstLoad = true;
-        applyLang('python', true);
-        renderArchiveList();
-        attachTabListeners();
-        renderTabs();
-        updateCounts();
-    }
-    function addTab(evt){
-        if(evt && !evt.isTrusted) return; // uzaktan kontrolde herkes aynı anda sekme eklemesin
-        uiClick();
-        tabCountRef.transaction(cur => (cur >= 1 ? cur : 1) + 1, (err, committed, snap)=>{
-            if(err || !committed){ toast('Sekme eklenemedi', true); return; }
-            switchTab(snap.val() - 1);
-            toast('Yeni sekme açıldı');
-        });
-    }
-    renderTabs();
     let isLocked = false;
     function applyLockState(locked){
         isLocked = locked;
